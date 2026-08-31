@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ECHO — cross-app-read relay board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600&family=Bebas+Neue&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="crt" id="crt">
+    <header>
+      <h1>Echo</h1>
+      <div class="meta" id="keeper-meta">TestNet · Arcron keeper</div>
+    </header>
+
+    <section class="status-row">
+      <div class="label">Status</div>
+      <div class="flaps big" id="status" aria-label="board status"></div>
+      <div class="meta" id="subhead">seeking</div>
+    </section>
+
+    <section class="board" id="board">
+      <div class="cell">
+        <div class="label">Last seen round</div>
+        <div class="flaps" id="stat-seen" aria-label="last beacon round echoed"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Last seed</div>
+        <div class="flaps" id="stat-seed" aria-label="last relayed seed, hex"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Relays</div>
+        <div class="flaps" id="stat-relays" aria-label="fresh reveals mirrored"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Beacon round</div>
+        <div class="flaps" id="stat-beacon" aria-label="beacon revealed round"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Lag</div>
+        <div class="flaps" id="stat-lag" aria-label="rounds behind the beacon"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Target</div>
+        <div class="flaps" id="stat-target" aria-label="beacon app id"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Chain round</div>
+        <div class="flaps" id="stat-round" aria-label="chain last round"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Keeper</div>
+        <div class="flaps" id="stat-keeper" aria-label="keeper app id"></div>
+      </div>
+    </section>
+
+    <p class="notes" id="notes">
+      The beacon speaks, echo remembers: each keeper call reads the beacon
+      app's global state (<code>revealed_round</code>, <code>revealed_seed</code>)
+      and mirrors whatever is new. The beacon reference is auto-attached by
+      keeper bots from simulation, so echo never names it in its own call.
+      Once deployed, state is read from the app's global state on the TestNet
+      indexer; the chain is the source of truth. Beacon:
+      <a href="https://testnet.explorer.perawallet.app/application/770742777">app 770742777</a>.
+      Contract:
+      <a href="https://github.com/corvid-agent/echo/blob/main/smart_contracts/echo/contract.py">smart_contracts/echo/contract.py</a>.
+    </p>
+
+    <footer class="foot">Unaudited. TestNet only. Not deployed. Read-only, no wallet.</footer>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
