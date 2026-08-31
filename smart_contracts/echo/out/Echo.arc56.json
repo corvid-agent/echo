@@ -1,0 +1,276 @@
+{
+    "name": "Echo",
+    "structs": {},
+    "methods": [
+        {
+            "name": "create",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [
+                    "NoOp"
+                ],
+                "call": []
+            },
+            "readonly": false,
+            "desc": "No-op create. Zero arguments on purpose.\nThe 68-year trap: never take a uint64 create arg that a deploy script might map to the keeper app id. Nothing to pass here.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "set_keeper",
+            "args": [
+                {
+                    "type": "uint64",
+                    "name": "keeper"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Name the Arcron keeper whose app account may call `relay`.\nCreator-only, one-time. Pass the keeper *application*, not a raw uint64. `relay` authorizes Application(keeper).address - the inner-call sender when Arcron `execute()` inner-calls this app - never itob(keeper.id). Puya lowers the Application param to uint64 in the ABI signature; the compiled selector is set_keeper(uint64)void.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "set_target",
+            "args": [
+                {
+                    "type": "uint64",
+                    "name": "target"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Name the beacon app whose global state `relay` reads.\nCreator-only, one-time; on TestNet this will be app 770742777 (arcron-beacon). Pass the beacon *application*, not a raw uint64; Puya lowers the Application param to uint64 in the ABI signature, so the compiled selector is set_target(uint64)void. There is no re-point method: a reader that changed targets mid-stream would silently splice two different seed histories together.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "relay",
+            "args": [],
+            "returns": {
+                "type": "uint64"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Arcron hook. Zero arguments; the selector is the only app arg.\nReads the TARGET app's global state - keys `revealed_round` and `revealed_seed` - via `app_global_get_ex`, which returns (value, ok) and never traps. Returns 1 when a fresh reveal was mirrored this call, 0 on every no-work path:\n* target unset (deploy ran but `set_target` has not),   * either key unreadable (beacon unwritten, or the reference was     not attached - keeper bots attach it automatically by     simulating first; see the module docstring),   * the beacon's revealed round is one echo has already stored.\nFAIL SOFT: after the two authorization asserts nothing here may reject - a failing hook gets exponentially backed off by keeper bots and burns upkeep escrow on retries.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "latest",
+            "args": [],
+            "returns": {
+                "type": "uint64"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "desc": "The last beacon round echo mirrored (0 = none yet).\nThe seed itself is deliberately not returned here: it is a 32-byte value readable straight from global state under the `last_seed` key, which is what indexers and off-chain readers already do.",
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "desc": "Cross-app-read relay: mirrors the beacon's revealed round and seed.\n\n    TestNet only. Unaudited. Not a product.\n    ",
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 4,
+                "bytes": 1
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {
+                "keeper_app": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "a2VlcGVyX2FwcA=="
+                },
+                "target_app": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "dGFyZ2V0X2FwcA=="
+                },
+                "last_seen_round": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "bGFzdF9zZWVuX3JvdW5k"
+                },
+                "relays": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "cmVsYXlz"
+                },
+                "last_seed": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMBytes",
+                    "key": "bGFzdF9zZWVk"
+                }
+            },
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        188
+                    ],
+                    "errorMessage": "Keeper already set"
+                },
+                {
+                    "pc": [
+                        190
+                    ],
+                    "errorMessage": "Keeper app required"
+                },
+                {
+                    "pc": [
+                        231
+                    ],
+                    "errorMessage": "Keeper not set"
+                },
+                {
+                    "pc": [
+                        182
+                    ],
+                    "errorMessage": "Only the creator can set the keeper"
+                },
+                {
+                    "pc": [
+                        210
+                    ],
+                    "errorMessage": "Only the creator can set the target"
+                },
+                {
+                    "pc": [
+                        239
+                    ],
+                    "errorMessage": "Only the keeper app may relay"
+                },
+                {
+                    "pc": [
+                        216
+                    ],
+                    "errorMessage": "Target already set"
+                },
+                {
+                    "pc": [
+                        218
+                    ],
+                    "errorMessage": "Target app required"
+                },
+                {
+                    "pc": [
+                        237
+                    ],
+                    "errorMessage": "application exists"
+                },
+                {
+                    "pc": [
+                        186,
+                        229
+                    ],
+                    "errorMessage": "check self.keeper_app exists"
+                },
+                {
+                    "pc": [
+                        317,
+                        354
+                    ],
+                    "errorMessage": "check self.last_seen_round exists"
+                },
+                {
+                    "pc": [
+                        341
+                    ],
+                    "errorMessage": "check self.relays exists"
+                },
+                {
+                    "pc": [
+                        214,
+                        247
+                    ],
+                    "errorMessage": "check self.target_app exists"
+                },
+                {
+                    "pc": [
+                        175,
+                        203
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.uint64"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAwIDEgOAogICAgYnl0ZWNibG9jayAia2VlcGVyX2FwcCIgInRhcmdldF9hcHAiICJsYXN0X3NlZW5fcm91bmQiICJyZWxheXMiICJsYXN0X3NlZWQiIDB4MTUxZjdjNzUKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5Ojc3LTc5CiAgICAvLyAjIEFwcCBpZCBvZiB0aGUgQXJjcm9uIGtlZXBlciBhbGxvd2VkIHRvIGNhbGwgYHJlbGF5YC4gWmVybyB1bnRpbAogICAgLy8gIyBgc2V0X2tlZXBlcmAuIE5vdCBhbiBpbnRlcnZhbC4gTm90IGEgY3JlYXRlIGFyZy4KICAgIC8vIHNlbGYua2VlcGVyX2FwcCA9IEdsb2JhbFN0YXRlKFVJbnQ2NCgwKSkKICAgIGJ5dGVjXzAgLy8gImtlZXBlcl9hcHAiCiAgICBpbnRjXzAgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjgwLTgyCiAgICAvLyAjIEFwcCBpZCBvZiB0aGUgYmVhY29uIHdob3NlIGdsb2JhbCBzdGF0ZSBgcmVsYXlgIHJlYWRzLiBaZXJvIHVudGlsCiAgICAvLyAjIGBzZXRfdGFyZ2V0YDsgb24gVGVzdE5ldCB0aGlzIHdpbGwgYmUgNzcwNzQyNzc3IChhcmNyb24tYmVhY29uKS4KICAgIC8vIHNlbGYudGFyZ2V0X2FwcCA9IEdsb2JhbFN0YXRlKFVJbnQ2NCgwKSkKICAgIGJ5dGVjXzEgLy8gInRhcmdldF9hcHAiCiAgICBpbnRjXzAgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjgzLTg0CiAgICAvLyAjIFRoZSBiZWFjb24gYHJldmVhbGVkX3JvdW5kYCBlY2hvIGxhc3QgbWlycm9yZWQuIFplcm8gPSBub3RoaW5nIHNlZW4uCiAgICAvLyBzZWxmLmxhc3Rfc2Vlbl9yb3VuZCA9IEdsb2JhbFN0YXRlKFVJbnQ2NCgwKSkKICAgIGJ5dGVjXzIgLy8gImxhc3Rfc2Vlbl9yb3VuZCIKICAgIGludGNfMCAvLyAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6ODUtODYKICAgIC8vICMgSG93IG1hbnkgZnJlc2ggcmV2ZWFscyBoYXZlIGJlZW4gcmVsYXllZCwgZXZlci4KICAgIC8vIHNlbGYucmVsYXlzID0gR2xvYmFsU3RhdGUoVUludDY0KDApKQogICAgYnl0ZWNfMyAvLyAicmVsYXlzIgogICAgaW50Y18wIC8vIDAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weTo4Ny04OQogICAgLy8gIyBUaGUgYmVhY29uIGByZXZlYWxlZF9zZWVkYCBmb3IgYGxhc3Rfc2Vlbl9yb3VuZGAuIDMyIGJ5dGVzIG9uY2UKICAgIC8vICMgc2V0OyBlbXB0eSB1bnRpbCB0aGUgZmlyc3QgcmVsYXkuCiAgICAvLyBzZWxmLmxhc3Rfc2VlZCA9IEdsb2JhbFN0YXRlKEJ5dGVzKCkpCiAgICBieXRlYyA0IC8vICJsYXN0X3NlZWQiCiAgICBwdXNoYnl0ZXMgMHgKICAgIGFwcF9nbG9iYWxfcHV0CgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjcwCiAgICAvLyBjbGFzcyBFY2hvKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBieiBtYWluX2NyZWF0ZV9Ob09wQDEwCiAgICBwdXNoYnl0ZXNzIDB4YzRjMWQ4ZjcgMHgzNzY5ODhlZSAweGFiZjcwNDhiIDB4YjYzYjYxNjAgLy8gbWV0aG9kICJzZXRfa2VlcGVyKHVpbnQ2NCl2b2lkIiwgbWV0aG9kICJzZXRfdGFyZ2V0KHVpbnQ2NCl2b2lkIiwgbWV0aG9kICJyZWxheSgpdWludDY0IiwgbWV0aG9kICJsYXRlc3QoKXVpbnQ2NCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIHNldF9rZWVwZXIgc2V0X3RhcmdldCByZWxheSBsYXRlc3QKICAgIGVycgoKbWFpbl9jcmVhdGVfTm9PcEAxMDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjcwCiAgICAvLyBjbGFzcyBFY2hvKEFSQzRDb250cmFjdCk6CiAgICBwdXNoYnl0ZXMgMHg0YzVjNjFiYSAvLyBtZXRob2QgImNyZWF0ZSgpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIGNyZWF0ZQogICAgZXJyCgoKLy8gY29udHJhY3QuRWNoby5jcmVhdGVbcm91dGluZ10oKSAtPiB2b2lkOgpjcmVhdGU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weTo5OAogICAgLy8gc2VsZi5rZWVwZXJfYXBwLnZhbHVlID0gVUludDY0KDApCiAgICBieXRlY18wIC8vICJrZWVwZXJfYXBwIgogICAgaW50Y18wIC8vIDAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weTo5OQogICAgLy8gc2VsZi50YXJnZXRfYXBwLnZhbHVlID0gVUludDY0KDApCiAgICBieXRlY18xIC8vICJ0YXJnZXRfYXBwIgogICAgaW50Y18wIC8vIDAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMDAKICAgIC8vIHNlbGYubGFzdF9zZWVuX3JvdW5kLnZhbHVlID0gVUludDY0KDApCiAgICBieXRlY18yIC8vICJsYXN0X3NlZW5fcm91bmQiCiAgICBpbnRjXzAgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjEwMQogICAgLy8gc2VsZi5yZWxheXMudmFsdWUgPSBVSW50NjQoMCkKICAgIGJ5dGVjXzMgLy8gInJlbGF5cyIKICAgIGludGNfMCAvLyAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTAyCiAgICAvLyBzZWxmLmxhc3Rfc2VlZC52YWx1ZSA9IEJ5dGVzKCkKICAgIGJ5dGVjIDQgLy8gImxhc3Rfc2VlZCIKICAgIHB1c2hieXRlcyAweAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjkxCiAgICAvLyBAYWJpbWV0aG9kKGNyZWF0ZT0icmVxdWlyZSIpCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgoKLy8gY29udHJhY3QuRWNoby5zZXRfa2VlcGVyW3JvdXRpbmddKCkgLT4gdm9pZDoKc2V0X2tlZXBlcjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjEwNAogICAgLy8gQGFiaW1ldGhvZCgpCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGxlbgogICAgaW50Y18yIC8vIDgKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQudWludDY0CiAgICBidG9pCiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMTQKICAgIC8vIGFzc2VydCBUeG4uc2VuZGVyID09IEdsb2JhbC5jcmVhdG9yX2FkZHJlc3MsICJPbmx5IHRoZSBjcmVhdG9yIGNhbiBzZXQgdGhlIGtlZXBlciIKICAgIHR4biBTZW5kZXIKICAgIGdsb2JhbCBDcmVhdG9yQWRkcmVzcwogICAgPT0KICAgIGFzc2VydCAvLyBPbmx5IHRoZSBjcmVhdG9yIGNhbiBzZXQgdGhlIGtlZXBlcgogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTE1CiAgICAvLyBhc3NlcnQgc2VsZi5rZWVwZXJfYXBwLnZhbHVlID09IDAsICJLZWVwZXIgYWxyZWFkeSBzZXQiCiAgICBpbnRjXzAgLy8gMAogICAgYnl0ZWNfMCAvLyAia2VlcGVyX2FwcCIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi5rZWVwZXJfYXBwIGV4aXN0cwogICAgIQogICAgYXNzZXJ0IC8vIEtlZXBlciBhbHJlYWR5IHNldAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTE2CiAgICAvLyBhc3NlcnQga2VlcGVyLmlkICE9IDAsICJLZWVwZXIgYXBwIHJlcXVpcmVkIgogICAgZHVwCiAgICBhc3NlcnQgLy8gS2VlcGVyIGFwcCByZXF1aXJlZAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTE3CiAgICAvLyBzZWxmLmtlZXBlcl9hcHAudmFsdWUgPSBrZWVwZXIuaWQKICAgIGJ5dGVjXzAgLy8gImtlZXBlcl9hcHAiCiAgICBzd2FwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTA0CiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4KCgovLyBjb250cmFjdC5FY2hvLnNldF90YXJnZXRbcm91dGluZ10oKSAtPiB2b2lkOgpzZXRfdGFyZ2V0OgogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTE5CiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzIgLy8gOAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50NjQKICAgIGJ0b2kKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjEzMAogICAgLy8gYXNzZXJ0IFR4bi5zZW5kZXIgPT0gR2xvYmFsLmNyZWF0b3JfYWRkcmVzcywgIk9ubHkgdGhlIGNyZWF0b3IgY2FuIHNldCB0aGUgdGFyZ2V0IgogICAgdHhuIFNlbmRlcgogICAgZ2xvYmFsIENyZWF0b3JBZGRyZXNzCiAgICA9PQogICAgYXNzZXJ0IC8vIE9ubHkgdGhlIGNyZWF0b3IgY2FuIHNldCB0aGUgdGFyZ2V0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMzEKICAgIC8vIGFzc2VydCBzZWxmLnRhcmdldF9hcHAudmFsdWUgPT0gMCwgIlRhcmdldCBhbHJlYWR5IHNldCIKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18xIC8vICJ0YXJnZXRfYXBwIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLnRhcmdldF9hcHAgZXhpc3RzCiAgICAhCiAgICBhc3NlcnQgLy8gVGFyZ2V0IGFscmVhZHkgc2V0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMzIKICAgIC8vIGFzc2VydCB0YXJnZXQuaWQgIT0gMCwgIlRhcmdldCBhcHAgcmVxdWlyZWQiCiAgICBkdXAKICAgIGFzc2VydCAvLyBUYXJnZXQgYXBwIHJlcXVpcmVkCiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMzMKICAgIC8vIHNlbGYudGFyZ2V0X2FwcC52YWx1ZSA9IHRhcmdldC5pZAogICAgYnl0ZWNfMSAvLyAidGFyZ2V0X2FwcCIKICAgIHN3YXAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMTkKICAgIC8vIEBhYmltZXRob2QoKQogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKCi8vIGNvbnRyYWN0LkVjaG8ucmVsYXlbcm91dGluZ10oKSAtPiB2b2lkOgpyZWxheToKICAgIHB1c2hieXRlcyAiIgogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTU0CiAgICAvLyBrZWVwZXIgPSBzZWxmLmtlZXBlcl9hcHAudmFsdWUKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18wIC8vICJrZWVwZXJfYXBwIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLmtlZXBlcl9hcHAgZXhpc3RzCiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxNTUKICAgIC8vIGFzc2VydCBrZWVwZXIgIT0gMCwgIktlZXBlciBub3Qgc2V0IgogICAgZHVwCiAgICBhc3NlcnQgLy8gS2VlcGVyIG5vdCBzZXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE1OAogICAgLy8gVHhuLnNlbmRlciA9PSBBcHBsaWNhdGlvbihrZWVwZXIpLmFkZHJlc3MKICAgIHR4biBTZW5kZXIKICAgIHN3YXAKICAgIGFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKICAgIGFzc2VydCAvLyBhcHBsaWNhdGlvbiBleGlzdHMKICAgID09CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxNTYtMTU5CiAgICAvLyAjIElubmVyLWNhbGwgc2VuZGVyIGlzIHRoZSBrZWVwZXIgKmFwcCBhY2NvdW50Kiwgbm90IGl0b2Ioa2VlcGVyLmlkKS4KICAgIC8vIGFzc2VydCAoCiAgICAvLyAgICAgVHhuLnNlbmRlciA9PSBBcHBsaWNhdGlvbihrZWVwZXIpLmFkZHJlc3MKICAgIC8vICksICJPbmx5IHRoZSBrZWVwZXIgYXBwIG1heSByZWxheSIKICAgIGFzc2VydCAvLyBPbmx5IHRoZSBrZWVwZXIgYXBwIG1heSByZWxheQogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTYxLTE2MgogICAgLy8gIyBObyBiZWFjb24gbmFtZWQgeWV0IC0gbm90aGluZyB0byByZWFkLiBSZXR1cm4sIGRvIG5vdCBhc3NlcnQuCiAgICAvLyB0YXJnZXQgPSBzZWxmLnRhcmdldF9hcHAudmFsdWUKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18xIC8vICJ0YXJnZXRfYXBwIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIHN3YXAKICAgIGR1cAogICAgdW5jb3ZlciAyCiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi50YXJnZXRfYXBwIGV4aXN0cwogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTYzCiAgICAvLyBpZiB0YXJnZXQgPT0gMDoKICAgIGJueiByZWxheV9hZnRlcl9pZl9lbHNlQDMKICAgIHBvcAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTY0CiAgICAvLyByZXR1cm4gVUludDY0KDApCiAgICBpbnRjXzAgLy8gMAoKcmVsYXlfYWZ0ZXJfaW5saW5lZF9jb250cmFjdC5FY2hvLnJlbGF5QDk6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMzUKICAgIC8vIEBhYmltZXRob2QoKQogICAgaXRvYgogICAgYnl0ZWMgNSAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKcmVsYXlfYWZ0ZXJfaWZfZWxzZUAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTY2LTE3MAogICAgLy8gIyBDcm9zcy1hcHAgcmVhZC4gZ2V0X2V4IG5ldmVyIGFzc2VydHM6IG9rIGlzIEZhbHNlIHdoZW4gdGhlIGtleSBpcwogICAgLy8gIyBhYnNlbnQgKG9yIHRoZSBhcHAgaXMgdW5hdmFpbGFibGUpLCBhbmQgRmFsc2UganVzdCBtZWFucyBubyB3b3JrLgogICAgLy8gcmV2ZWFsZWRfcm91bmQsIHJvdW5kX29rID0gQXBwR2xvYmFsLmdldF9leF91aW50NjQoCiAgICAvLyAgICAgQXBwbGljYXRpb24odGFyZ2V0KSwgYiJyZXZlYWxlZF9yb3VuZCIKICAgIC8vICkKICAgIGR1cAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTY5CiAgICAvLyBBcHBsaWNhdGlvbih0YXJnZXQpLCBiInJldmVhbGVkX3JvdW5kIgogICAgcHVzaGJ5dGVzIDB4NzI2NTc2NjU2MTZjNjU2NDVmNzI2Zjc1NmU2NAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTY2LTE3MAogICAgLy8gIyBDcm9zcy1hcHAgcmVhZC4gZ2V0X2V4IG5ldmVyIGFzc2VydHM6IG9rIGlzIEZhbHNlIHdoZW4gdGhlIGtleSBpcwogICAgLy8gIyBhYnNlbnQgKG9yIHRoZSBhcHAgaXMgdW5hdmFpbGFibGUpLCBhbmQgRmFsc2UganVzdCBtZWFucyBubyB3b3JrLgogICAgLy8gcmV2ZWFsZWRfcm91bmQsIHJvdW5kX29rID0gQXBwR2xvYmFsLmdldF9leF91aW50NjQoCiAgICAvLyAgICAgQXBwbGljYXRpb24odGFyZ2V0KSwgYiJyZXZlYWxlZF9yb3VuZCIKICAgIC8vICkKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICB1bmNvdmVyIDIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE3MgogICAgLy8gQXBwbGljYXRpb24odGFyZ2V0KSwgYiJyZXZlYWxlZF9zZWVkIgogICAgcHVzaGJ5dGVzIDB4NzI2NTc2NjU2MTZjNjU2NDVmNzM2NTY1NjQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE3MS0xNzMKICAgIC8vIHJldmVhbGVkX3NlZWQsIHNlZWRfb2sgPSBBcHBHbG9iYWwuZ2V0X2V4X2J5dGVzKAogICAgLy8gICAgIEFwcGxpY2F0aW9uKHRhcmdldCksIGIicmV2ZWFsZWRfc2VlZCIKICAgIC8vICkKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBidXJ5IDQKICAgIHN3YXAKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE3NAogICAgLy8gaWYgbm90IHJvdW5kX29rIG9yIG5vdCBzZWVkX29rOgogICAgYnogcmVsYXlfaWZfYm9keUA1CiAgICBkaWcgMgogICAgYm56IHJlbGF5X2FmdGVyX2lmX2Vsc2VANgoKcmVsYXlfaWZfYm9keUA1OgogICAgcG9wbiAyCiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxNzUKICAgIC8vIHJldHVybiBVSW50NjQoMCkKICAgIGludGNfMCAvLyAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxMzUKICAgIC8vIEBhYmltZXRob2QoKQogICAgYiByZWxheV9hZnRlcl9pbmxpbmVkX2NvbnRyYWN0LkVjaG8ucmVsYXlAOQoKcmVsYXlfYWZ0ZXJfaWZfZWxzZUA2OgogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTc3LTE4MAogICAgLy8gIyBOb3RoaW5nIG5ldyBzaW5jZSB0aGUgbGFzdCByZWxheS4gTm90ZSB0aGlzIGFsc28gY292ZXJzIHRoZQogICAgLy8gIyBuZXZlci1yZXZlYWxlZCBiZWFjb246IGl0cyByb3VuZCByZWFkcyAwLCB3aGljaCBpcyB3aGF0IGVjaG8KICAgIC8vICMgYWxyZWFkeSBoYXMuCiAgICAvLyBpZiByZXZlYWxlZF9yb3VuZCA9PSBzZWxmLmxhc3Rfc2Vlbl9yb3VuZC52YWx1ZToKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18yIC8vICJsYXN0X3NlZW5fcm91bmQiCiAgICBhcHBfZ2xvYmFsX2dldF9leAogICAgYXNzZXJ0IC8vIGNoZWNrIHNlbGYubGFzdF9zZWVuX3JvdW5kIGV4aXN0cwogICAgZGlnIDIKICAgID09CiAgICBieiByZWxheV9hZnRlcl9pZl9lbHNlQDgKICAgIHBvcG4gMgogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTgxCiAgICAvLyByZXR1cm4gVUludDY0KDApCiAgICBpbnRjXzAgLy8gMAogICAgLy8gc21hcnRfY29udHJhY3RzL2VjaG8vY29udHJhY3QucHk6MTM1CiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIGIgcmVsYXlfYWZ0ZXJfaW5saW5lZF9jb250cmFjdC5FY2hvLnJlbGF5QDkKCnJlbGF5X2FmdGVyX2lmX2Vsc2VAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE4My0xODQKICAgIC8vICMgRlJFU0ggLSB0aGUgYmVhY29uIHNwb2tlIGEgcm91bmQgZWNobyBoYXMgbm90IHNlZW4uIFJlbWVtYmVyIGJvdGguCiAgICAvLyBzZWxmLmxhc3Rfc2Vlbl9yb3VuZC52YWx1ZSA9IHJldmVhbGVkX3JvdW5kCiAgICBieXRlY18yIC8vICJsYXN0X3NlZW5fcm91bmQiCiAgICB1bmNvdmVyIDIKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxODUKICAgIC8vIHNlbGYubGFzdF9zZWVkLnZhbHVlID0gcmV2ZWFsZWRfc2VlZAogICAgYnl0ZWMgNCAvLyAibGFzdF9zZWVkIgogICAgc3dhcAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE4NgogICAgLy8gc2VsZi5yZWxheXMudmFsdWUgKz0gMQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzMgLy8gInJlbGF5cyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi5yZWxheXMgZXhpc3RzCiAgICBpbnRjXzEgLy8gMQogICAgKwogICAgYnl0ZWNfMyAvLyAicmVsYXlzIgogICAgc3dhcAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjE4NwogICAgLy8gcmV0dXJuIFVJbnQ2NCgxKQogICAgaW50Y18xIC8vIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9lY2hvL2NvbnRyYWN0LnB5OjEzNQogICAgLy8gQGFiaW1ldGhvZCgpCiAgICBiIHJlbGF5X2FmdGVyX2lubGluZWRfY29udHJhY3QuRWNoby5yZWxheUA5CgoKLy8gY29udHJhY3QuRWNoby5sYXRlc3Rbcm91dGluZ10oKSAtPiB2b2lkOgpsYXRlc3Q6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxOTcKICAgIC8vIHJldHVybiBzZWxmLmxhc3Rfc2Vlbl9yb3VuZC52YWx1ZQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzIgLy8gImxhc3Rfc2Vlbl9yb3VuZCIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi5sYXN0X3NlZW5fcm91bmQgZXhpc3RzCiAgICAvLyBzbWFydF9jb250cmFjdHMvZWNoby9jb250cmFjdC5weToxODkKICAgIC8vIEBhYmltZXRob2QocmVhZG9ubHk9VHJ1ZSkKICAgIGl0b2IKICAgIGJ5dGVjIDUgLy8gMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4K",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="
+    },
+    "byteCode": {
+        "approval": "CyADAAEIJgYKa2VlcGVyX2FwcAp0YXJnZXRfYXBwD2xhc3Rfc2Vlbl9yb3VuZAZyZWxheXMJbGFzdF9zZWVkBBUffHUxGEAAESgiZykiZyoiZysiZycEgABnMRkURDEYQQAkggQExMHY9wQ3aYjuBKv3BIsEtjthYDYaAI4EACIAPgBaANkAgARMXGG6NhoAjgEAAQAoImcpImcqImcrImcnBIAAZyNDNhoBSRUkEkQXMQAyCRJEIihlRBRESUQoTGcjQzYaAUkVJBJEFzEAMgkSRCIpZUQURElEKUxnI0OAACIoZURJRDEATHIIRBJEIillTElPAkRAAApIIhYnBUxQsCNDSYAOcmV2ZWFsZWRfcm91bmRlTwKADXJldmVhbGVkX3NlZWRlRQRMQQAFSwJAAAZGAiJC/8MiKmVESwISQQAGRgIiQv+zKk8CZycETGciK2VEIwgrTGcjQv+eIiplRBYnBUxQsCND",
+        "clear": "C4EBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 10,
+            "patch": 1
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}
