@@ -1,9 +1,9 @@
 {
-  "appId": 0,
+  "appId": 770768198,
   "network": "testnet",
   "keeperAppId": 769891898,
   "beaconAppId": 770742777,
-  "upkeepId": 0,
+  "upkeepId": 115,
   "interval": 1700,
-  "notes": "not deployed — cross-app-read relay; mirrors beacon revealed_round/revealed_seed via relay() called by arcron keeper"
+  "notes": "deployed — cross-app-read relay; mirrors beacon revealed_round/revealed_seed via relay() called by arcron keeper, upkeep #115"
 }
